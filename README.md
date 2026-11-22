@@ -10,6 +10,10 @@
 
 Create `app/radio.properties` based on the provided `radio.properties.example`. Fill in your radio's IP address (you'll need to configure a static IP, which you can do by accessing the audio system over HTTP, or by setting up static DHCP assignment in your home network). You can also configure filtering. The `radio.no_wifi_button.visible` allows hiding the Wi-Fi button, which can be useful if you're using automation (e.g. Samsung's Modes and Routines) to ensure Wi-Fi is enabled when the app is running.
 
+## Roadmap
+
+The app works, no new development is planned.
+
 ## Acknowledgements
 
 Based on API documentation sourced from the pyamaha project: <https://github.com/rsc-dev/pyamaha/tree/master/doc>
