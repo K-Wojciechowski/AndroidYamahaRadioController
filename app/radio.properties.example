@@ -1,1 +1,4 @@
 radio.ip=192.0.2.1
+radio.filter.language=Polish
+radio.filter.default=true
+radio.no_wifi_button.visible=true

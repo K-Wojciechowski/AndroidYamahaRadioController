@@ -28,7 +28,9 @@ sealed interface RadioUiState {
 }
 
 class YamahaRadioViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<RadioUiState>(RadioUiState.Loading(true))
+    private val _uiState = MutableStateFlow<RadioUiState>(
+        RadioUiState.Loading(BuildConfig.RADIO_FILTER_DEFAULT)
+    )
 
     val uiState: StateFlow<RadioUiState> = _uiState.asStateFlow()
 
@@ -60,7 +62,9 @@ class YamahaRadioViewModel : ViewModel() {
     }
 
     fun filterPresets(presets: List<RadioPreset>): List<RadioPreset> =
-        presets.filter { p -> p.language == "Polish" || p.language == null }.toList()
+        presets.filter { p ->
+            p.language == BuildConfig.RADIO_FILTER_LANGUAGE || p.language == null
+        }.toList()
 
     fun refresh() {
         viewModelScope.launch {

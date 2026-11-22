@@ -91,8 +91,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.refreshButton).setOnClickListener {
             withLocalNetworkPermission { viewModel.refresh() }
         }
-        findViewById<Button>(R.id.enableWifiButton).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+        findViewById<Button>(R.id.enableWifiButton).apply {
+            visibility = if (BuildConfig.NO_WIFI_BUTTON_VISIBLE) View.VISIBLE else View.GONE
+            setOnClickListener {
+                startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+            }
         }
         val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeRefresh)
         swipeRefresh.setColorSchemeColors(

@@ -14,6 +14,12 @@ val radioProperties = Properties().apply {
 }
 val radioIp = radioProperties.getProperty("radio.ip")
     ?: error("Missing radio.ip in app/radio.properties")
+val radioFilterLanguage = radioProperties.getProperty("radio.filter.language")
+    ?: error("Missing radio.filter.language in app/radio.properties")
+val radioFilterDefault = radioProperties.getProperty("radio.filter.default")?.toBooleanStrictOrNull()
+    ?: error("Missing or invalid radio.filter.default in app/radio.properties")
+val noWifiButtonVisible = radioProperties.getProperty("radio.no_wifi_button.visible")?.toBooleanStrictOrNull()
+    ?: error("Missing or invalid radio.no_wifi_button.visible in app/radio.properties")
 
 android {
     namespace = "pl.krzysztofwojciechowski.yamaharadio"
@@ -25,11 +31,14 @@ android {
         applicationId = "pl.krzysztofwojciechowski.yamaharadio"
         minSdk = 31
         targetSdk = 37
-        versionCode = 2
-        versionName = "2"
+        versionCode = 3
+        versionName = "3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "RADIO_IP", "\"$radioIp\"")
+        buildConfigField("String", "RADIO_FILTER_LANGUAGE", "\"$radioFilterLanguage\"")
+        buildConfigField("Boolean", "RADIO_FILTER_DEFAULT", radioFilterDefault.toString())
+        buildConfigField("Boolean", "NO_WIFI_BUTTON_VISIBLE", noWifiButtonVisible.toString())
     }
 
     buildFeatures {
