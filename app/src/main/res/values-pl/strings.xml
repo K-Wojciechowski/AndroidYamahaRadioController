@@ -12,4 +12,5 @@
     <string name="error_text">Nie można połączyć się z radiem.</string>
     <string name="error_text_detail">Nie można połączyć się z radiem. %1$s</string>
     <string name="error_refresh_button">Odśwież</string>
+    <string name="local_network_permission_required">Do połączenia z radiem wymagane jest uprawnienie do sieci lokalnej.</string>
 </resources>

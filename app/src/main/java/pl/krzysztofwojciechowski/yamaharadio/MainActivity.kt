@@ -1,11 +1,12 @@
 package pl.krzysztofwojciechowski.yamaharadio
 
-import android.annotation.SuppressLint
+import android.Manifest
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.*
@@ -13,6 +14,7 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -32,6 +34,17 @@ import pl.krzysztofwojciechowski.yamaharadio.model.RadioPreset
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: YamahaRadioViewModel by viewModels()
+    private var pendingLocalNetworkAction: (() -> Unit)? = null
+    private val localNetworkPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            val action = pendingLocalNetworkAction
+            pendingLocalNetworkAction = null
+            if (granted) {
+                (action ?: ::updateWifiState).invoke()
+            } else {
+                viewModel.setError(getString(R.string.local_network_permission_required))
+            }
+        }
     private var connManager: ConnectivityManager? = null
     private var wifiCallbackRegistered = false
 
@@ -73,17 +86,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         val adapter = RadioListAdapter()
-        adapter.clickListener = { preset -> viewModel.setPreset(preset) }
+        adapter.clickListener = { preset -> withLocalNetworkPermission { viewModel.setPreset(preset) } }
 
-        findViewById<Button>(R.id.refreshButton).setOnClickListener { viewModel.refresh() }
+        findViewById<Button>(R.id.refreshButton).setOnClickListener {
+            withLocalNetworkPermission { viewModel.refresh() }
+        }
         findViewById<Button>(R.id.enableWifiButton).setOnClickListener {
             startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
         }
         val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeRefresh)
         swipeRefresh.setColorSchemeColors(
-            MaterialColors.getColor(swipeRefresh, com.google.android.material.R.attr.colorPrimary)
+            MaterialColors.getColor(swipeRefresh, com.google.android.material.R.attr.colorPrimaryInverse)
         )
-        swipeRefresh.setOnRefreshListener { viewModel.refresh() }
+        swipeRefresh.setOnRefreshListener { withLocalNetworkPermission { viewModel.refresh() } }
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
@@ -100,63 +115,53 @@ class MainActivity : AppCompatActivity() {
         if (manager == null) {
             viewModel.setError("Unable to retrieve connectivity manager")
         } else {
-            updateWifiState()
-
             val wifiRequest = NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .build()
             manager.registerNetworkCallback(wifiRequest, wifiNetworkCallback)
             wifiCallbackRegistered = true
+            withLocalNetworkPermission { updateWifiState() }
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     invalidateOptionsMenu()
-                    val progressBar = findViewById<ProgressBar>(R.id.progressBar)
                     val noWifiLayout = findViewById<ConstraintLayout>(R.id.noWifiLayout)
                     val errorLayout = findViewById<ConstraintLayout>(R.id.errorLayout)
-                    val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeRefresh)
-                    val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
                     val errorText = findViewById<TextView>(R.id.errorText)
                     when (state) {
                         is RadioUiState.Error -> {
                             swipeRefresh.isRefreshing = false
+                            adapter.update(emptyList())
                             if (state.detail == null) {
                                 errorText.setText(R.string.error_text)
                             } else {
                                 errorText.text = getString(R.string.error_text_detail, state.detail)
                             }
 
-                            progressBar.visibility = View.GONE
                             noWifiLayout.visibility = View.GONE
                             errorLayout.visibility = View.VISIBLE
-                            swipeRefresh.visibility = View.GONE
                         }
 
                         is RadioUiState.Loading -> {
-                            val refreshing = swipeRefresh.isRefreshing
+                            swipeRefresh.isRefreshing = true
                             adapter.update(emptyList())
-                            progressBar.visibility = if (refreshing) View.GONE else View.VISIBLE
                             noWifiLayout.visibility = View.GONE
                             errorLayout.visibility = View.GONE
-                            swipeRefresh.visibility = View.VISIBLE
                         }
 
                         is RadioUiState.NoWifi -> {
                             swipeRefresh.isRefreshing = false
-                            progressBar.visibility = View.GONE
+                            adapter.update(emptyList())
                             noWifiLayout.visibility = View.VISIBLE
                             errorLayout.visibility = View.GONE
-                            swipeRefresh.visibility = View.GONE
                         }
 
                         is RadioUiState.Success -> {
                             swipeRefresh.isRefreshing = false
-                            progressBar.visibility = View.GONE
                             noWifiLayout.visibility = View.GONE
                             errorLayout.visibility = View.GONE
-                            swipeRefresh.visibility = View.VISIBLE
                             adapter.update(state.shownPresets)
                         }
                     }
@@ -171,6 +176,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateWifiState() {
+        if (!hasLocalNetworkPermission()) return
+
         val manager = connManager
         val activeNetwork = manager?.activeNetwork
         val capabilities = activeNetwork?.let(manager::getNetworkCapabilities)
@@ -182,6 +189,20 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             viewModel.setNoWifi()
+        }
+    }
+
+    private fun hasLocalNetworkPermission(): Boolean =
+        Build.VERSION.SDK_INT < 37 ||
+            checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    private fun withLocalNetworkPermission(action: () -> Unit) {
+        if (hasLocalNetworkPermission()) {
+            action()
+        } else {
+            pendingLocalNetworkAction = action
+            localNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
         }
     }
 
@@ -218,17 +239,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.menu_volume_down -> {
-                viewModel.volumeDown()
+                withLocalNetworkPermission { viewModel.volumeDown() }
                 true
             }
 
             R.id.menu_volume_up -> {
-                viewModel.volumeUp()
+                withLocalNetworkPermission { viewModel.volumeUp() }
                 true
             }
 
             R.id.menu_power -> {
-                viewModel.togglePower()
+                withLocalNetworkPermission { viewModel.togglePower() }
                 true
             }
 

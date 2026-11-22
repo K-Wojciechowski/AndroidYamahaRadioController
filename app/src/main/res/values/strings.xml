@@ -11,4 +11,5 @@
     <string name="error_text">Unable to contact the radio.</string>
     <string name="error_text_detail">Unable to contact the radio. %1$s</string>
     <string name="error_refresh_button">Refresh</string>
+    <string name="local_network_permission_required">Local network permission is required to connect to the radio.</string>
 </resources>
