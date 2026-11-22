@@ -46,6 +46,7 @@
                 android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/enableWifiButton"/>
         <Button
                 android:text="@string/no_wifi_button"
+                android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:id="@+id/enableWifiButton"
                 app:layout_constraintTop_toBottomOf="@+id/noWifiText" app:layout_constraintEnd_toEndOf="parent"
