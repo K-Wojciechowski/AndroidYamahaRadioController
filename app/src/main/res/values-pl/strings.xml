@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Radio</string>
+    <string name="menu_filter_disable">Pokaż międzynarodowe</string>
+    <string name="menu_filter_enable">Ukryj międzynarodowe</string>
+    <string name="menu_power">Włącz/wyłącz</string>
+    <string name="menu_refresh">Odśwież</string>
+    <string name="menu_volume_up">Zwiększ głośność</string>
+    <string name="menu_volume_down">Zmniejsz głośność</string>
+    <string name="no_wifi_text">Aplikacja wymaga Wi-Fi.</string>
+    <string name="no_wifi_button">Otwórz ustawienia Wi-Fi</string>
+    <string name="error_text">Nie można połączyć się z radiem.</string>
+    <string name="error_text_detail">Nie można połączyć się z radiem. %1$s</string>
+    <string name="error_refresh_button">Odśwież</string>
+</resources>

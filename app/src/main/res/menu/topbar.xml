@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/menu_filter_disable" app:showAsAction="always" android:id="@+id/menu_filter"
+          android:icon="@drawable/globe"/>
+    <item android:title="@string/menu_volume_down" app:showAsAction="always" android:id="@+id/menu_volume_down"
+          android:icon="@drawable/volume_down"/>
+    <item android:title="@string/menu_volume_up" app:showAsAction="always" android:id="@+id/menu_volume_up"
+          android:icon="@drawable/volume_up"/>
+    <item android:title="@string/menu_power" app:showAsAction="always" android:id="@+id/menu_power"
+          android:icon="@drawable/power"/>
+</menu>
